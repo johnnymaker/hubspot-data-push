@@ -1,9 +1,7 @@
-import requests
-import json
+import requests,json
 from clickhouse_driver import Client
-from config import host, hubspot_api_key
+from config import chost, hubspot_api_key, url
 
-url = "https://api.hubapi.com/contacts/v1/contact/batch"
 
 headers = {
     'Authorization': f'Bearer {hubspot_api_key}',
@@ -11,11 +9,11 @@ headers = {
 }
 
 try:
-    # Establish a connection
-    client = Client(host=host)
+  
+    client = Client(host=chost)
     print("Connection to the database successful")
 
-    # New ClickHouse query
+    
     query = """
     SELECT 
       dictGetString(
@@ -50,13 +48,14 @@ try:
     GROUP BY 
       user_id
     ORDER BY user_id asc
+    LIMIT 5
     """
 
     print("Fetching data from database...")
     results = client.execute(query)
     print("number of accounts: ", len(results))
 
-    # Create a list to store the payload for updating multiple contacts
+    # list to store the fetched data 
     contacts_payload = []
 
     for result in results:
@@ -87,7 +86,7 @@ try:
           
     print("accounts to update: ", len(contacts_payload))
 
-    # Split contacts_payload into batch of 15k contacts because atmost 20k contacts can be updated in single request
+    # Split data into batch of 10k contacts because atmost 20k contacts can be updated in single request
     chunk_size = 10000
     for i in range(0, len(contacts_payload), chunk_size):
         chunk_payload = contacts_payload[i:i + chunk_size]
@@ -100,5 +99,4 @@ except Exception as e:
     print("Error connecting to ClickHouse: ", e)
 
 finally:
-    # Close the connection 
     client.disconnect()
