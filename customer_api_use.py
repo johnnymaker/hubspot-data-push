@@ -48,7 +48,6 @@ try:
     GROUP BY 
       user_id
     ORDER BY user_id asc
-    LIMIT 5
     """
 
     print("Fetching data from database...")

@@ -2,7 +2,7 @@ import mysql.connector
 import requests,json
 from datetime import datetime, timezone
 from config import mhost, mdatabase, mpassword, muser, hubspot_api_key, url
-
+from fetch_hubspot_contact import get_all_contacts
 
 connection = mysql.connector.connect(
     host = mhost,
@@ -15,6 +15,9 @@ headers = {
     'Authorization': f'Bearer {hubspot_api_key}',
     'Content-Type': 'application/json'
 }
+
+
+email_to_contact = get_all_contacts()
 
 try:
 
@@ -64,57 +67,60 @@ try:
     JOIN accounts acc ON acc.id = bp.account_id 
     ORDER BY 
     bp.account_id ASC 
-    LIMIT 5
     """
 
     cursor.execute(query)
-
     
     results = cursor.fetchall()
 
     totalpayload = []
-
+    
+    it = 0
     for result in results:
                 email = result[0]
-                account_id = result[1]
-                role = result[2]
-                is_paying_customer = result[3]
-                first_paid_plan_date = result[4]
-                plan_renew_date = result[5]
+                if email in email_to_contact:
+                        account_id = result[1]
+                        role = result[2]
+                        is_paying_customer = result[3]
+                        first_paid_plan_date = result[4]
+                        plan_renew_date = result[5]
 
-                properties = [
-                    {
-                        "property": "paying_customer",
-                        "value": is_paying_customer
-                    },
-                    {
-                        "property": "Plan",
-                        "value": role
-                    },
-                    {
-                        "property": "account_id",
-                        "value": account_id
-                    }
-                ]
+                        properties = [
+                            {
+                                "property": "paying_customer",
+                                "value": is_paying_customer
+                            },
+                            {
+                                "property": "Plan",
+                                "value": role
+                            },
+                            {
+                                "property": "account_id",
+                                "value": account_id
+                            }
+                        ]
 
-                if first_paid_plan_date:
-                    properties.append({
-                        "property": "first_paid_plan_date",
-                        "value": int(datetime(first_paid_plan_date.year, first_paid_plan_date.month, first_paid_plan_date.day, tzinfo=timezone.utc).timestamp()) * 1000
-                    })
+                        if first_paid_plan_date:
+                            properties.append({
+                                "property": "first_paid_plan_date",
+                                "value": int(datetime(first_paid_plan_date.year, first_paid_plan_date.month, first_paid_plan_date.day, tzinfo=timezone.utc).timestamp()) * 1000
+                            })
 
-                if plan_renew_date:
-                    properties.append({
-                        "property": "Plan_renew_date",
-                        "value": int(datetime(plan_renew_date.year, plan_renew_date.month, plan_renew_date.day, tzinfo=timezone.utc).timestamp()) * 1000
-                    })
+                        if plan_renew_date:
+                            properties.append({
+                                "property": "Plan_renew_date",
+                                "value": int(datetime(plan_renew_date.year, plan_renew_date.month, plan_renew_date.day, tzinfo=timezone.utc).timestamp()) * 1000
+                            })
 
-                contact_data = {
-                    "email": email,
-                    "properties": properties
-                }
+                        contact_data = {
+                            "email": email,
+                            "properties": properties
+                        }
 
-                totalpayload.append(contact_data)
+                        totalpayload.append(contact_data)
+
+                        print(it)
+                        it += 1
     
     print("Total payload:", len(totalpayload))
 
