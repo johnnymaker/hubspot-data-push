@@ -5,8 +5,6 @@ Push customer data to HubSpot
 
 # Clone this repository
 $ git clone https://github.com/OmkarAcharekar/hubspot-data-push.git
-
-# Go into the repository
 $ cd hubspot-data-push
 
 # Install libraries
