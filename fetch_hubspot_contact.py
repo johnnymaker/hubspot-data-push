@@ -20,7 +20,7 @@ def get_all_contacts():
     # Paginate your request using offset
     has_more = True
     while has_more:
-        parameters = urllib.parse.urlencode(parameter_dict)  # Using the correct module
+        parameters = urllib.parse.urlencode(parameter_dict) 
         get_url = get_all_contacts_url + "?" + parameters  # Adding '?' to separate the parameters in the URL
         r = requests.get(url=get_url, headers=headers)
         response_dict = json.loads(r.text)
