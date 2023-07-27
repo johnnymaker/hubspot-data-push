@@ -39,7 +39,10 @@ try:
     AND 100000000 THEN 'Business' ELSE 'Unknown' END AS plan, 
     IF(bp.is_paid = 1, 'true', 'false') AS is_paying_customer, 
     DATE(bps.became_a_customer_date) AS became_a_customer_date, 
-    DATE(bps.plan_renew_date) AS plan_renew_date 
+    DATE(bps.bill_period_end) AS billing_period_end,
+    DATE(bps.bill_period_start) AS billing_period_start,
+    DATE_ADD(DATE(bps.bill_period_end), INTERVAL 1 DAY) AS plan_renew_date,
+    bp.points as total_billing_points
     FROM 
     (
         SELECT 
@@ -58,7 +61,8 @@ try:
         MIN(
             CASE WHEN is_paid = 1 THEN started_at END
         ) AS became_a_customer_date, 
-        MAX(ended_at) AS plan_renew_date 
+        MAX(started_at) AS bill_period_start,
+        MAX(ended_at) AS bill_period_end
         FROM 
         bitquery.billing_periods 
         GROUP BY 
@@ -66,7 +70,7 @@ try:
     ) AS bps ON bp.account_id = bps.account_id 
     JOIN accounts acc ON acc.id = bp.account_id 
     ORDER BY 
-    bp.account_id ASC 
+    bp.account_id ASC
     """
 
     cursor.execute(query)
@@ -83,7 +87,10 @@ try:
                         role = result[2]
                         is_paying_customer = result[3]
                         first_paid_plan_date = result[4]
-                        plan_renew_date = result[5]
+                        billing_period_end = result[5]
+                        billing_period_start = result[6]
+                        plan_renew_date = result[7]
+                        total_billing_points = result[8]
 
                         properties = [
                             {
@@ -97,6 +104,10 @@ try:
                             {
                                 "property": "account_id",
                                 "value": account_id
+                            },
+                            {
+                                "property": "total_billing_points",
+                                "value": total_billing_points
                             }
                         ]
 
@@ -106,6 +117,18 @@ try:
                                 "value": int(datetime(first_paid_plan_date.year, first_paid_plan_date.month, first_paid_plan_date.day, tzinfo=timezone.utc).timestamp()) * 1000
                             })
 
+                        if billing_period_end:
+                            properties.append({
+                                "property": "billing_period_end",
+                                "value": int(datetime(billing_period_end.year, billing_period_end.month, billing_period_end.day, tzinfo=timezone.utc).timestamp()) * 1000
+                            })
+
+                        if billing_period_start:
+                            properties.append({
+                                "property": "billing_period_start",
+                                "value": int(datetime(billing_period_start.year, billing_period_start.month, billing_period_start.day, tzinfo=timezone.utc).timestamp()) * 1000
+                            })
+                        
                         if plan_renew_date:
                             properties.append({
                                 "property": "Plan_renew_date",
@@ -124,7 +147,7 @@ try:
     
     print("Total payload:", len(totalpayload))
 
-    chunk_size = 50
+    chunk_size = 8000
     for i in range(0, len(totalpayload), chunk_size):
         chunk_payload = totalpayload[i:i + chunk_size]
         batch_size = len(chunk_payload)  
