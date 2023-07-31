@@ -82,7 +82,7 @@ try:
     it = 0
     for result in results:
                 email = result[0]
-                if email in email_to_contact:
+                if email != '-' and email in email_to_contact:
                         account_id = result[1]
                         role = result[2]
                         is_paying_customer = result[3]

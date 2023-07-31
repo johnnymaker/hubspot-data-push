@@ -33,6 +33,17 @@ def get_all_contacts():
     print('loop finished')
 
     list_length = len(contact_list)
+    
     print(list_length)
-    email_to_contact = {contact['identity-profiles'][0]['identities'][0]['value']: contact for contact in contact_list}
+    
+    email_to_contact = []
+
+    for contact in contact_list:
+            for profile in contact['identity-profiles']:
+                for identity in profile['identities']:
+                    if identity['type'] == "EMAIL" and identity.get('is-primary', False):
+                        email_to_contact.append(identity['value'])
+
+    print(len(email_to_contact))
+    
     return email_to_contact

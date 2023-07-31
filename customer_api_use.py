@@ -1,12 +1,14 @@
 import requests,json
 from clickhouse_driver import Client
 from config import chost, hubspot_api_key, url
-
+from fetch_hubspot_contact import get_all_contacts
 
 headers = {
     'Authorization': f'Bearer {hubspot_api_key}',
     'Content-Type': 'application/json'
 }
+
+email_to_contact = get_all_contacts()
 
 try:
   
@@ -63,8 +65,8 @@ try:
 
     for result in results:
         email, account_id, days_since_last_api_call, api_calls_last_7_days, api_calls_last_30_days, blockchains, apis = result
-        if email != '-':
-            
+        if email != '-' and email in email_to_contact:
+            print(email)
             blockchains_filtered = [item.capitalize() for item in blockchains if item in blockchain_accepted]
             api_filtered = [item.capitalize() for item in apis if item in api_accepted]
             blockchains_str = ' , '.join(blockchains_filtered)
