@@ -9,6 +9,8 @@ headers = {
 }
 
 def get_all_contacts():
+
+    print('Fetching contacts from Hubspot....')
         
     max_results = 40000 
     count = 10000
@@ -30,11 +32,8 @@ def get_all_contacts():
         if len(contact_list) >= max_results:  # Exit pagination, based on whatever value you've set your max results variable to.
             print('maximum number of results exceeded')
             break
-    print('loop finished')
-
-    list_length = len(contact_list)
     
-    print(list_length)
+    print('Total number of contacts fetched from Hubspot:',len(contact_list))
     
     email_to_contact = []
 
@@ -44,6 +43,6 @@ def get_all_contacts():
                     if identity['type'] == "EMAIL" and identity.get('is-primary', False):
                         email_to_contact.append(identity['value'])
 
-    print(len(email_to_contact))
+    print('Number of emails retrieved :',len(email_to_contact))
     
     return email_to_contact

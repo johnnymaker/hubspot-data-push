@@ -16,7 +16,6 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-
 email_to_contact = get_all_contacts()
 
 try:
@@ -145,7 +144,7 @@ try:
                         print(it)
                         it += 1
     
-    print("Total payload:", len(totalpayload))
+    print("Total Contacts to be updated:", len(totalpayload))
 
     chunk_size = 8000
     for i in range(0, len(totalpayload), chunk_size):
