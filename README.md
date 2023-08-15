@@ -24,8 +24,8 @@ muser = "******************"
 mpassword = "*************"
 mdatabase = "*************"
 
-# Run scripts
-$ python filename.py
+# Run main.py
+$ python main.py
 
 ```
 
