@@ -1,7 +1,7 @@
 import mysql.connector
 import requests
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from clickhouse_driver import Client
 from config import mhost, mdatabase, mpassword, muser, hubspot_api_key, url, chost
 
@@ -40,18 +40,29 @@ def update_points_consumed(email_to_contact):
 
         query = """
         SELECT 
-            bp.account_id, 
-            a.email,
-            MAX(bp.started_at) AS latest_bp_starts,
-            MAX(bp.ended_at) AS latest_bp_end 
-        FROM 
-            bitquery.billing_periods bp
-        JOIN 
-            bitquery.accounts a ON bp.account_id = a.id
-        GROUP BY 
-            bp.account_id, 
-            a.email
-        """
+    bp.account_id, 
+    a.email,
+    sub.deactivated_at,
+    MAX(bp.started_at) AS latest_bp_starts,
+    MAX(bp.ended_at) AS latest_bp_end 
+    FROM 
+    bitquery.billing_periods bp
+    JOIN 
+    bitquery.accounts a ON bp.account_id = a.id
+    LEFT JOIN (
+    SELECT s1.account_id, s1.deactivated_at
+    FROM bitquery.subscriptions s1
+    JOIN (
+        SELECT account_id, MAX(created_at) AS max_created_at
+        FROM bitquery.subscriptions
+        GROUP BY account_id
+    ) AS s2 ON s1.account_id = s2.account_id AND s1.created_at = s2.max_created_at
+    ) AS sub ON bp.account_id = sub.account_id
+    GROUP BY 
+    bp.account_id, 
+    a.email,
+    sub.deactivated_at
+    """
 
         cursor.execute(query)
         billing_periods = cursor.fetchall()
@@ -80,8 +91,9 @@ def update_points_consumed(email_to_contact):
         for bp in billing_periods:
             account_id = bp[0]
             email = bp[1]
-            started_at = datetime.strftime(bp[2], '%Y-%m-%d')
-            ended_at = datetime.strftime(bp[3], '%Y-%m-%d')
+            deactivated_at = bp[2]
+            started_at = datetime.strftime(bp[3], '%Y-%m-%d')
+            ended_at = datetime.strftime(bp[4], '%Y-%m-%d')
 
             if email != '-' and email in email_to_contact:
         
@@ -98,6 +110,12 @@ def update_points_consumed(email_to_contact):
                         }
                     ]
                 }
+                if deactivated_at:
+                    contact_data["properties"].append({
+                        "property": "subscription_cancelled",
+                        "value": int(datetime(deactivated_at.year, deactivated_at.month, deactivated_at.day, tzinfo=timezone.utc).timestamp()) * 1000
+                    })
+
                 totalpayload.append(contact_data)
 
 
