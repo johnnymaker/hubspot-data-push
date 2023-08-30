@@ -41,7 +41,8 @@ def update_customer_acc_info(email_to_contact):
         DATE(bps.bill_period_end) AS billing_period_end,
         DATE(bps.bill_period_start) AS billing_period_start,
         DATE_ADD(DATE(bps.bill_period_end), INTERVAL 1 DAY) AS plan_renew_date,
-        bp.points as total_billing_points
+        bp.points as total_billing_points,
+        acc.name 
         FROM 
         (
             SELECT 
@@ -90,6 +91,19 @@ def update_customer_acc_info(email_to_contact):
                             billing_period_start = result[6]
                             plan_renew_date = result[7]
                             total_billing_points = result[8]
+                            acc_name = result[9]
+
+                            if acc_name:
+                                name_parts = acc_name.split()
+                                if len(name_parts) == 1:
+                                    firstname = name_parts[0]
+                                    lastname = ""
+                                else:
+                                    firstname = name_parts[0]
+                                    lastname = " ".join(name_parts[1:])
+                            else:
+                                firstname = ""
+                                lastname = ""
 
                             properties = [
                                 {
@@ -107,6 +121,14 @@ def update_customer_acc_info(email_to_contact):
                                 {
                                     "property": "total_billing_points",
                                     "value": total_billing_points
+                                },
+                                {
+                                    "property": "firstname",
+                                    "value": firstname
+                                },
+                                {
+                                    "property": "lastname",
+                                    "value": lastname
                                 }
                             ]
 
