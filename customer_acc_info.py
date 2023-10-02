@@ -24,11 +24,11 @@ def update_customer_acc_info(email_to_contact):
         acc.email,
         acc.id AS user_id,
         CASE WHEN acc.role = 'admin' THEN 'Admin' WHEN bp.points BETWEEN 0 
-        AND 100000 THEN 'Developer' WHEN bp.points BETWEEN 100001 
-        AND 3000000 THEN 'Team' WHEN bp.points BETWEEN 3000001 
-        AND 10000000 THEN 'Startup' WHEN bp.points BETWEEN 10000001 
-        AND 40000000 THEN 'Growth' WHEN bp.points BETWEEN 40000001 
-        AND 100000000 THEN 'Business' ELSE 'Unknown' END AS plan,
+        AND 2999999 THEN 'Developer' WHEN bp.points BETWEEN 3000000 
+        AND 9999999 THEN 'Team' WHEN bp.points BETWEEN 10000000 
+        AND 39999999 THEN 'Startup' WHEN bp.points BETWEEN 40000000 
+        AND 99999999 THEN 'Growth' WHEN bp.points BETWEEN 100000000 
+        AND 1000000000 THEN 'Business' ELSE 'Unknown' END AS plan,
         IF(bp.is_paid = 1, 'true', 'false') AS is_paying_customer,
         DATE(bps.became_a_customer_date) AS became_a_customer_date,
         DATE(bps.bill_period_end) AS billing_period_end,
