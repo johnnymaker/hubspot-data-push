@@ -1,6 +1,14 @@
 import requests,json
 from clickhouse_driver import Client
 from config import chost, hubspot_api_key, url
+from urllib.parse import urlparse
+
+
+
+def get_base_path(url):
+    """Extract base path from a URL, excluding any query parameters or fragments."""
+    parsed = urlparse(url)
+    return parsed.scheme + "://" + parsed.netloc
 
 
 def update_customer_api_use(email_to_contact):
@@ -35,7 +43,8 @@ def update_customer_api_use(email_to_contact):
           AND date <= today()
         ) AS api_calls_last_30_days,
         groupArray(DISTINCT COALESCE(nullIf(tags[2],''), tags[1])) AS blockchains,
-        groupArray(DISTINCT tags[3]) AS apis
+        groupArray(DISTINCT tags[3]) AS apis,
+        groupArray(DISTINCT referer_header) AS referrers
       FROM 
         (
           SELECT 
@@ -60,14 +69,20 @@ def update_customer_api_use(email_to_contact):
 
       blockchain_accepted = ['ethereum', 'bsc', 'ethereum2' 'bitcoin', 'filecoin', 'eos', 'conflux', 'conflux_tethys', 'solana', 'bitcash', 'zcash', 'tron', 'litecoin', 'matic', 'algorand', 'dash', 'avalanche', 'stellar', 'bitcoinsv', 'klaytn', 'celo_rc1', 'goerli', 'search', 'ethclassic', 'celo_alfajores', 'binance', 'bsc_testnet', 'cosmos','terra', 'cardano' , 'fantom',  'dogecoin', 'velas', 'algorand_testnet' , 'celo_baklava' , 'velas_testnet', 'algorand_betanet', 'ethclassic_reorg' , 'hedera', 'eth2', 'elrond', 'moonbeam', 'conflux_hydra', 'ethpow', 'cronos', 'conflux_oceanus', 'medalla', 'crypto_testnet', 'ethclassic', 'flow', 'diem','diem_testnet', 'everscale', 'tezos', 'cosmoshub', 'heimdall', 'crypto_mainnet', 'ripple', 'ltc', 'BNB', 'polygon', 'doge', 'tronscan' , 'harmony', 'diem_testnet', 'diem', 'libra_testnet']
       api_accepted = ['dexTrades', 'balances', 'transfers', 'coinpath', 'transactions', 'smartContractCalls', 'omniTransactions','events']
+      excluded_urls = ['https://ide.bitquery.io', 'https://graphql.bitquery.io', '://']
 
       for result in results:
-          email, account_id, days_since_last_api_call, api_calls_last_7_days, api_calls_last_30_days, blockchains, apis = result
+          email, account_id, days_since_last_api_call, api_calls_last_7_days, api_calls_last_30_days, blockchains, apis, referrers = result
           if email != '-' and email in email_to_contact:
               blockchains_filtered = [item.capitalize() for item in blockchains if item in blockchain_accepted]
               api_filtered = [item.capitalize() for item in apis if item in api_accepted]
               blockchains_str = ' , '.join(blockchains_filtered)
               apis_str = ' , '.join(api_filtered)
+              trimmed_referrers = [get_base_path(ref_url) for ref_url in referrers]
+              unique_referrers = list(set(trimmed_referrers))
+              filtered_referrers = [url for url in unique_referrers if url not in excluded_urls]
+              referrers_str = ' , '.join(filtered_referrers)
+
 
               contact_data = {
                   "email": email,
@@ -94,6 +109,10 @@ def update_customer_api_use(email_to_contact):
                       {
                           "property": "used_apis",
                           "value": apis_str
+                      },
+                      {
+                          "property": "referrers",
+                          "value": referrers_str
                       }
                   ]
               }
