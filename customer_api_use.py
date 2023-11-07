@@ -51,11 +51,6 @@ def update_customer_api_use(email_to_contact):
             * 
           from 
             graphql.user_requests_storage 
-          UNION ALL 
-          SELECT 
-            * 
-          from 
-            graphql_old.user_requests_storage
         ) AS combined_data
       GROUP BY 
         user_id
