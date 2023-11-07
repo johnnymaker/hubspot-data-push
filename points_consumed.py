@@ -39,17 +39,18 @@ def update_points_consumed(email_to_contact):
         cursor = connection.cursor()
 
         query = """
-        SELECT 
-    bp.account_id, 
+        SELECT
+    bp.account_id,
     a.email,
     sub.deactivated_at,
     MAX(bp.started_at) AS latest_bp_starts,
-    MAX(bp.ended_at) AS latest_bp_end 
-    FROM 
+    MAX(bp.ended_at) AS latest_bp_end,
+    p.channel AS payment_method
+FROM
     bitquery.billing_periods bp
-    JOIN 
+JOIN
     bitquery.accounts a ON bp.account_id = a.id
-    LEFT JOIN (
+LEFT JOIN (
     SELECT s1.account_id, s1.deactivated_at
     FROM bitquery.subscriptions s1
     JOIN (
@@ -57,11 +58,16 @@ def update_points_consumed(email_to_contact):
         FROM bitquery.subscriptions
         GROUP BY account_id
     ) AS s2 ON s1.account_id = s2.account_id AND s1.created_at = s2.max_created_at
-    ) AS sub ON bp.account_id = sub.account_id
-    GROUP BY 
-    bp.account_id, 
+) AS sub ON bp.account_id = sub.account_id
+LEFT JOIN (
+    SELECT account_id, channel
+    FROM bitquery.payments po
+    WHERE status = 2 and completed_at is not NULL and starting_at <= CURDATE() and ending_at >= CURDATE()
+) AS p ON bp.account_id = p.account_id
+GROUP BY
+    bp.account_id,
     a.email,
-    sub.deactivated_at
+    sub.deactivated_at;
     """
 
         cursor.execute(query)
@@ -94,6 +100,7 @@ def update_points_consumed(email_to_contact):
             deactivated_at = bp[2]
             started_at = datetime.strftime(bp[3], '%Y-%m-%d')
             ended_at = datetime.strftime(bp[4], '%Y-%m-%d')
+            payment_method = bp[5]
 
             if email != '-' and email in email_to_contact:
         
@@ -107,6 +114,10 @@ def update_points_consumed(email_to_contact):
                         {
                             "property": "points_consumed",
                             "value": points_consumed
+                        },
+                        {
+                            "property": "payment_method",
+                            "value": payment_method
                         }
                     ]
                 }
