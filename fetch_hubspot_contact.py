@@ -12,7 +12,7 @@ def get_all_contacts():
 
     print('Fetching contacts from Hubspot....')
         
-    max_results = 40000 
+    max_results = 50000 
     count = 10000
     contact_list = []
     property_list = []

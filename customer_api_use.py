@@ -63,7 +63,7 @@ def update_customer_api_use(email_to_contact):
       contacts_payload = []
 
       blockchain_accepted = ['ethereum', 'bsc', 'ethereum2' 'bitcoin', 'filecoin', 'eos', 'conflux', 'conflux_tethys', 'solana', 'bitcash', 'zcash', 'tron', 'litecoin', 'matic', 'algorand', 'dash', 'avalanche', 'stellar', 'bitcoinsv', 'klaytn', 'celo_rc1', 'goerli', 'search', 'ethclassic', 'celo_alfajores', 'binance', 'bsc_testnet', 'cosmos','terra', 'cardano' , 'fantom',  'dogecoin', 'velas', 'algorand_testnet' , 'celo_baklava' , 'velas_testnet', 'algorand_betanet', 'ethclassic_reorg' , 'hedera', 'eth2', 'elrond', 'moonbeam', 'conflux_hydra', 'ethpow', 'cronos', 'conflux_oceanus', 'medalla', 'crypto_testnet', 'ethclassic', 'flow', 'diem','diem_testnet', 'everscale', 'tezos', 'cosmoshub', 'heimdall', 'crypto_mainnet', 'ripple', 'ltc', 'BNB', 'polygon', 'doge', 'tronscan' , 'harmony', 'diem_testnet', 'diem', 'libra_testnet']
-      api_accepted = ['dexTrades', 'balances', 'transfers', 'coinpath', 'transactions', 'smartContractCalls', 'omniTransactions','events']
+      api_accepted = ['dexTrades', 'balances', 'transfers', 'coinpath', 'transactions', 'smartContractCalls', 'omniTransactions','events','blocks','address','inputs','outputs','addressStats','arguments','trades','orders','references','messages','activeAddresses','calls','payments','offers','instructions','instructionAccounts','blockRewards','escrows']
       excluded_urls = ['https://ide.bitquery.io', 'https://graphql.bitquery.io', '://']
 
       for result in results:

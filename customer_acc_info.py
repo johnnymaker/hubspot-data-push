@@ -106,8 +106,6 @@ def update_customer_acc_info(email_to_contact):
                     {"property": "Plan", "value": role},
                     {"property": "account_id", "value": account_id},
                     {"property": "total_billing_points", "value": total_billing_points},
-                    {"property": "firstname", "value": firstname},
-                    {"property": "lastname", "value": lastname},
                 ]
 
                 if first_paid_plan_date:
